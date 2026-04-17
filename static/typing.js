@@ -103,7 +103,7 @@ searchBox.addEventListener('keyup', function(){
 			if (data['status'] === 'success') {
 				var content = '';
 				content += '<p class="results-num">' + data['res'].length + ' result(s) found...</p>';
-				content += '<table><tr> <th>id</th> <th>Russian</th> <th>Sound</th> <th>Meaning</th></tr>';
+				content += '<table><tr> <th>id</th> <th>Spanish</th> <th>Sound</th> <th>Meaning</th></tr>';
 				
 				for (var i=0; i < data['res'].length; i++){
 					content += '<tr><td>' + data['res'][i][0] + '</td><td>' + data['res'][i][1] + '</td><td>' + data['res'][i][2] + '</td>';

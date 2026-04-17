@@ -1,5 +1,5 @@
 from flask import Flask, render_template, jsonify, request
-from excel import get_rows, alphabet
+from excel import get_rows
 from flask_sqlalchemy import SQLAlchemy
 import os, random
 from itertools import cycle  # to go throw category list items continuosly
@@ -15,22 +15,18 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
-dic_file = r"Russian Dictionary.xlsx"
-alpha_file = r"Cyrillic letters.xlsx"
+dic_file = r"Spanish Dictionary.xlsx"
+
 
 
 # Create database table using SQLAlchemy
-class Russian(db.Model):
+class Spanish(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     word = db.Column(db.String, unique=True)
     sound = db.Column(db.String)
     meaning = db.Column(db.String)
 
-# Create database table for Cyrillic alphabet
-class Alpha(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    letter = db.Column(db.String, unique=True)
-    sound = db.Column(db.String)
+
 
 ## 1) CREATE THE DATABASE: Run Python shell with "python" command --->
 ##    import db with "from app import db" 
@@ -54,9 +50,9 @@ class Alpha(db.Model):
 # BUILD THE QUIZ - ONE QUESTION & 4 ANSWERS:    
 def quiz():
     # select 4 random records from db:
-    results = db.engine.execute(''' SELECT * FROM Russian ORDER BY RANDOM() LIMIT 4''')
+    results = db.engine.execute(''' SELECT * FROM Spanish ORDER BY RANDOM() LIMIT 4''')
     # count the # of records in db:
-    rows = db.engine.execute(''' SELECT COUNT(id) FROM Russian''')
+    rows = db.engine.execute(''' SELECT COUNT(id) FROM Spanish''')
     count = [i[0] for i in rows][0] # will return the no. of rows in db as integer
     
     l = []
@@ -82,36 +78,19 @@ def quiz():
                         (f'What is the sound of "<span>{v[0]}</span>"?',sample["sound"], get_choices(l,"sound"))]
        question, answer, choix = random.choice(possibility)
     if k == 'sound':
-        question, answer, choix = (f'What is the Russian for this sound "<span>{v[0]}</span>"?',sample["word"], get_choices(l,"word"))
+        question, answer, choix = (f'What is the Spanish for this sound "<span>{v[0]}</span>"?',sample["word"], get_choices(l,"word"))
     if k == 'meaning':
-        question, answer, choix = (f'What is the Russian for "<span>{v[0]}</span>"?',sample["word"], get_choices(l,"word"))
+        question, answer, choix = (f'What is the Spanish for "<span>{v[0]}</span>"?',sample["word"], get_choices(l,"word"))
         
     return question, answer, choix, count
     
-def alpha_quiz():
-    # select 4 random records from db:
-    results = db.engine.execute(''' SELECT * FROM Alpha ORDER BY RANDOM() LIMIT 4''')
-    
-    l = []
-    for result in results:
-        d = {}
-        d["letter"] = result.letter
-        d["sound"] = result.sound
-        d["id"] = result.id
-        l.append(d)
-    
-    sample = random.choice(l)
-    question = f"What is the sound of \"<span class=\'ruski\'>{sample['letter']}</span>\"?" 
-    questionID = sample['id']
-    choices = [(i['sound'], i['id']) for i in l]
-    
-    return question, questionID, choices
+
 
 def typing_quiz():
     # select 1 random record from db:
-    results = db.engine.execute(''' SELECT * FROM Russian ORDER BY RANDOM() LIMIT 1''')
+    results = db.engine.execute(''' SELECT * FROM Spanish ORDER BY RANDOM() LIMIT 1''')
     # count the # of records in db:
-    rows = db.engine.execute(''' SELECT COUNT(id) FROM Russian''')
+    rows = db.engine.execute(''' SELECT COUNT(id) FROM Spanish''')
     count = [i[0] for i in rows][0] # will return the no. of rows in db as integer
     
     results = [(i.word, i.id) for i in results]
@@ -131,9 +110,7 @@ def index():
 def manage():
     return render_template('manage.html')
 
-@app.route('/alpha')
-def alpha():
-    return render_template('alpha.html')
+
 
 @app.route('/typing')
 def typing():
@@ -170,42 +147,6 @@ def get_typing():
     
     return jsonify(data) 
    
-@app.route('/get_alpha', methods=['POST'])
-def get_alpha():    
-    # get the list of IDs from front end
-    data = request.get_json()
-    IDs = data['IDs']
-      
-    # Check that ID is unique
-    while True:
-        # UNWRAP THE TUPLE --> the 'alpha_quiz()'function  
-        # returns a tuple of 3 items (question, questionID, choices)  
-        question, questionID, choices = alpha_quiz()
-        questionID = str(questionID)
-        # questionID = '846'
-        if len(IDs) == 33:
-            IDs = []
-        if questionID in IDs:
-            question, questionID, choices = alpha_quiz()
-            questionID = str(questionID)   
-        if questionID not in IDs:
-            IDs.append(questionID)
-            break
-
-                
-    data = {
-        "IDs": IDs,
-        "question": question,
-        "questionID": questionID,
-        "answers": [
-                {'answer_id': choices[0][-1], 'answer': choices[0][0]},
-                {'answer_id': choices[1][-1], 'answer': choices[1][0]},
-                {'answer_id': choices[2][-1], 'answer': choices[2][0]},
-                {'answer_id': choices[3][-1], 'answer': choices[3][0]}
-            ]
-        }
-    
-    return jsonify(data) 
 
 @app.route('/get_quiz', methods=['POST'])
 def get_quiz():    
@@ -250,7 +191,7 @@ def search_Database():
     data = request.get_json()
     
     if data["userInput"].strip() and len(data["userInput"].strip()) > 1: 
-        results = Russian.query.filter(Russian.word.like(f'%{data["userInput"]}%') | Russian.meaning.like(f'%{data["userInput"]}%')).all()
+        results = Spanish.query.filter(Spanish.word.like(f'%{data["userInput"]}%') | Spanish.meaning.like(f'%{data["userInput"]}%')).all()
                
         l = [[i.id, i.word.replace(unidecode(data["userInput"]),f'<i class="searching">{unidecode(data["userInput"])}</i>'),
         i.sound, i.meaning.replace(unidecode(data["userInput"]),f'<i class="searching">{unidecode(data["userInput"])}</i>')] for i in results]
