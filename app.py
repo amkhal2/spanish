@@ -16,11 +16,17 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
 dic_file = r"Spanish Dictionary.xlsx"
-
+verb_file = r"Spanish Verbs.xlsx" 
 
 
 # Create database table using SQLAlchemy
 class Spanish(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    word = db.Column(db.String, unique=True)
+    sound = db.Column(db.String)
+    meaning = db.Column(db.String)
+    
+class Verb(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     word = db.Column(db.String, unique=True)
     sound = db.Column(db.String)
@@ -83,8 +89,40 @@ def quiz():
         question, answer, choix = (f'What is the Spanish for "<span>{v[0]}</span>"?',sample["word"], get_choices(l,"word"))
         
     return question, answer, choix, count
-    
 
+    
+def verb_quiz():
+    # select 4 random records from db:
+    results = db.engine.execute(''' SELECT * FROM Verb ORDER BY RANDOM() LIMIT 4''')
+    # count the # of records in db:
+    rows = db.engine.execute(''' SELECT COUNT(id) FROM Verb''')
+    count = [i[0] for i in rows][0] # will return the no. of rows in db as integer
+    
+    l = []
+    for result in results:
+        d = {}
+        d["word"] = [result.word, result.id]
+        # d["sound"] = [result.sound, result.id]
+        d["meaning"] = [result.meaning, result.id]
+        l.append(d)
+    
+    def get_choices(some_list, some_key):
+    # will get values for some key in a list of dics
+        choices = []
+        for element in some_list:
+            choices.append(element[some_key])
+        return choices
+
+    sample = random.choice(l)
+    k, v = random.choice(list(sample.items()))
+ 
+    if k == 'word':
+       possibility = [(f'What is the English for "<span>{v[0]}</span>"?',sample["meaning"], get_choices(l,"meaning"))]
+       question, answer, choix = random.choice(possibility)
+    if k == 'meaning':
+        question, answer, choix = (f'What is the Spanish for "<span>{v[0]}</span>"?',sample["word"], get_choices(l,"word"))
+        
+    return question, answer, choix, count
 
 def typing_quiz():
     # select 1 random record from db:
@@ -105,6 +143,10 @@ def index():
     # return errors
     
     return render_template('index.html')
+    
+@app.route('/verbs')
+def verbs():
+    return render_template('verbs.html')
 
 @app.route('/manage')
 def manage():
@@ -185,6 +227,42 @@ def get_quiz():
     
     return jsonify(data)
 
+@app.route('/get_verb_quiz', methods=['POST'])
+def get_verb_quiz():    
+    # get the list of IDs from front end
+    data = request.get_json()
+    IDs = data['IDs']
+    
+    # Check that ID is unique
+    while True:
+        # UNWRAP THE TUPLE --> the 'quiz()'function  
+        # returns a tuple of 4 items (question, correct answer, choices, count)  
+        question, answer, choices, count = verb_quiz()
+        questionID = str(answer[-1])
+        # questionID = '846'
+        if len(IDs) == count:
+            IDs = []
+        if questionID in IDs:
+            question, answer, choices, count = verb_quiz()
+            questionID = str(answer[-1])   
+        if questionID not in IDs:
+            IDs.append(questionID)
+            break
+
+                
+    data = {
+        "IDs": IDs,
+        "question": question,
+        "questionID": questionID,
+        "answers": [
+                {'answer_id': choices[0][-1], 'answer': choices[0][0]},
+                {'answer_id': choices[1][-1], 'answer': choices[1][0]},
+                {'answer_id': choices[2][-1], 'answer': choices[2][0]},
+                {'answer_id': choices[3][-1], 'answer': choices[3][0]}
+            ]
+        }
+    
+    return jsonify(data)
    
 @app.route('/search_Database', methods=['POST'])
 def search_Database():
@@ -200,6 +278,19 @@ def search_Database():
         
     return jsonify({"res": 'No results found!'})
 
+@app.route('/search_verb', methods=['POST'])
+def search_verb():
+    data = request.get_json()
+    
+    if data["userInput"].strip() and len(data["userInput"].strip()) > 1: 
+        results = Verb.query.filter(Verb.word.like(f'%{data["userInput"]}%') | Verb.meaning.like(f'%{data["userInput"]}%')).all()
+               
+        l = [[i.id, i.word.replace(unidecode(data["userInput"]),f'<i class="searching">{unidecode(data["userInput"])}</i>'),
+        i.sound, i.meaning.replace(unidecode(data["userInput"]),f'<i class="searching">{unidecode(data["userInput"])}</i>')] for i in results]
+        if l:
+            return jsonify({"res": l, 'status':'success'})
+        
+    return jsonify({"res": 'No results found!'})
 
 @app.route('/find_word', methods=['POST'])
 def find_word():
@@ -263,6 +354,7 @@ def update_record():
         'res': str(e)[:49], 'class': 'fail'
          })
 
-   
+
+    
 if __name__ == "__main__":
     app.run(debug=True)
