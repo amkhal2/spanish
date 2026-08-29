@@ -17,7 +17,7 @@ var searchResult = document.getElementById('searchResult'); // search results di
 
 startButton.addEventListener('click', function(){
 	var toServer = JSON.stringify({
-	'IDs': IDs, 'secret': 'verb' });
+	'IDs': IDs, 'secret': 'adj' });
 	
 	message.innerHTML = '';
 	
@@ -92,7 +92,7 @@ checkButton.addEventListener('click', function(){
 
 searchBox.addEventListener('keyup', function(){
 	var toServer = JSON.stringify({
-		'userInput': searchBox.value, 'database':'Verb'	});
+		'userInput': searchBox.value, 'database':'Adj'});
 	
 	// Make the request
 	var xhr = new XMLHttpRequest();

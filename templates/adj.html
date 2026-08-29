@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Spanish Verbs Quiz</title>
+		<title>Spanish Adjectives Quiz</title>
 		<link rel='stylesheet' href='{{ url_for("static", filename="styles.css") }}'>
 	</head>
 	
@@ -14,7 +14,7 @@
 			<a href='{{ url_for("manage") }}'>Manage Records</a>
 		</div>
 		
-		<h2 id="header">Spanish Verbs</h2>
+		<h2 id="header">Spanish Adjectives</h2>
 		
 		<div id="buttons">
 			<button id="start">Start Quiz</button>
@@ -36,7 +36,7 @@
 			<div id="searchResult"></div>
 		</div>
 		
-		<script src="{{ url_for('static', filename='verb_script.js') }}"></script>
+		<script src="{{ url_for('static', filename='adj_script.js') }}"></script>
 	</body>
 	
 </html>

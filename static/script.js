@@ -17,7 +17,7 @@ var searchResult = document.getElementById('searchResult'); // search results di
 
 startButton.addEventListener('click', function(){
 	var toServer = JSON.stringify({
-	'IDs': IDs });
+	'IDs': IDs, 'secret': 'general' }); // 'secret' key will decide which database table will be searched
 	
 	message.innerHTML = '';
 	
@@ -92,7 +92,7 @@ checkButton.addEventListener('click', function(){
 
 searchBox.addEventListener('keyup', function(){
 	var toServer = JSON.stringify({
-		'userInput': searchBox.value, 'page':'home'	});
+		'userInput': searchBox.value, 'database':'Spanish'	});
 	
 	// Make the request
 	var xhr = new XMLHttpRequest();
