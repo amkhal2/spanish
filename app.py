@@ -18,7 +18,7 @@ db = SQLAlchemy(app)
 dic_file = r"Spanish Dictionary.xlsx"
 verb_file = r"Spanish Verbs.xlsx" 
 adj_file = r'Spanish Adjectives.xlsx'
-
+noun_file = r'Spanish Nouns.xlsx'
 
 # Create database table using SQLAlchemy
 class Spanish(db.Model):
@@ -39,6 +39,12 @@ class Adj(db.Model):
     sound = db.Column(db.String)
     meaning = db.Column(db.String)
 
+class Noun(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    word = db.Column(db.String, unique=True)
+    sound = db.Column(db.String)
+    meaning = db.Column(db.String)
+    
 ## 1) CREATE THE DATABASE: Run Python shell with "python" command --->
 ##    import db with "from app import db" 
 ##    ---> creat db with "db.create_all()"
@@ -60,32 +66,18 @@ class Adj(db.Model):
      
 # BUILD THE QUIZ - ONE QUESTION & 4 ANSWERS:    
 def quiz(secret):
-    if secret == 'general':    
-        # select 4 random records from db:
-        results = db.engine.execute(''' SELECT * FROM Spanish ORDER BY RANDOM() LIMIT 4''')
-        # count the # of records in db:
-        rows = db.engine.execute(''' SELECT COUNT(id) FROM Spanish''')
-        count = [i[0] for i in rows][0] # will return the no. of rows in db as integer
-        
-    if secret == 'verb':
-        # select 4 random records from db:
-        results = db.engine.execute(''' SELECT * FROM Verb ORDER BY RANDOM() LIMIT 4''')
-        # count the # of records in db:
-        rows = db.engine.execute(''' SELECT COUNT(id) FROM Verb''')
-        count = [i[0] for i in rows][0] # will return the no. of rows in db as integer
-        
-    if secret == 'adj':
-        # select 4 random records from db:
-        results = db.engine.execute(''' SELECT * FROM Adj ORDER BY RANDOM() LIMIT 4''')
-        # count the # of records in db:
-        rows = db.engine.execute(''' SELECT COUNT(id) FROM Adj''')
-        count = [i[0] for i in rows][0] # will return the no. of rows in db as integer        
+  
+    # select 4 random records from db:
+    results = db.engine.execute(f''' SELECT * FROM {secret} ORDER BY RANDOM() LIMIT 4''')
+    # count the # of records in db:
+    rows = db.engine.execute(''' SELECT COUNT(id) FROM Spanish''')
+    count = [i[0] for i in rows][0] # will return the no. of rows in db as integer       
     
     l = []
     for result in results:
         d = {}
         d["word"] = [result.word, result.id]
-        if secret == 'general': 
+        if secret == 'Spanish': 
             d["sound"] = [result.sound, result.id]
         d["meaning"] = [result.meaning, result.id]
         l.append(d)
@@ -100,16 +92,16 @@ def quiz(secret):
     sample = random.choice(l)
     k, v = random.choice(list(sample.items()))
  
-    if k == 'word' and secret == 'general':
+    if k == 'word' and secret == 'Spanish':
        possibility = [(f'What is the English for "<span>{v[0]}</span>"?',sample["meaning"], get_choices(l,"meaning")), 
                         (f'What is the sound of "<span>{v[0]}</span>"?',sample["sound"], get_choices(l,"sound"))]
        question, answer, choix = random.choice(possibility)
        
-    if k == 'word' and secret != 'general':
+    if k == 'word' and secret != 'Spanish':
        possibility = [(f'What is the English for "<span>{v[0]}</span>"?',sample["meaning"], get_choices(l,"meaning"))]
        question, answer, choix = random.choice(possibility)
         
-    if k == 'sound' and secret == 'general':
+    if k == 'sound' and secret == 'Spanish':
         question, answer, choix = (f'What is the Spanish for this sound "<span>{v[0]}</span>"?',sample["word"], get_choices(l,"word"))
     if k == 'meaning':
         question, answer, choix = (f'What is the Spanish for "<span>{v[0]}</span>"?',sample["word"], get_choices(l,"word"))
@@ -144,6 +136,10 @@ def verbs():
 @app.route('/adj')
 def adj():
     return render_template('adj.html')
+
+@app.route('/noun')
+def noun():
+    return render_template('noun.html')
 
 @app.route('/manage')
 def manage():

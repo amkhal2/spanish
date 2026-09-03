@@ -17,7 +17,7 @@ var searchResult = document.getElementById('searchResult'); // search results di
 
 startButton.addEventListener('click', function(){
 	var toServer = JSON.stringify({
-	'IDs': IDs, 'secret': 'adj' });
+	'IDs': IDs, 'secret': 'Adj' });
 	
 	message.innerHTML = '';
 	
